@@ -48,7 +48,7 @@ class LoaderLocation {
             m_LocationUpdateDistance = distance[0]
         }
 
-        activity.LoaderThread().runOnOSThread {
+        activity.LoaderThread()?.runOnOSThread {
             m_LocationListener = LocationUpdateHandler()
             m_LocationManager!!.requestLocationUpdates(
                 "gps",

@@ -215,7 +215,7 @@ open class LoaderView : SurfaceView, Callback, OnClickListener, OnDismissListene
     }
 
     fun enableRespondingToRotation() {
-        m_LoaderActivity.LoaderThread().onSplashFinished()
+        m_LoaderActivity.LoaderThread()?.onSplashFinished()
     }
 
     fun videoPlay(
@@ -404,7 +404,7 @@ open class LoaderView : SurfaceView, Callback, OnClickListener, OnDismissListene
     }
 
     override fun onTouchEvent(p0: MotionEvent): Boolean =
-        m_LoaderActivity.LoaderThread() != null && m_LoaderActivity.LoaderThread().onTouchEvent(p0)
+        m_LoaderActivity.LoaderThread()?.onTouchEvent(p0) == true
 
     override fun dispatchKeyEvent(p0: KeyEvent): Boolean {
         if (LoaderAPI.s3eConfigGet("AndroidIgnoreBackKeyFromPointerDevice", 0) != 0 && p0.keyCode == 4) {
@@ -455,6 +455,18 @@ open class LoaderView : SurfaceView, Callback, OnClickListener, OnDismissListene
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
         trace("surfaceChanged: ${width}x${height}")
         val loaderThread = m_LoaderActivity.LoaderThread()
+        if (loaderThread == null) {
+            // SurfaceView attaches during onCreate(), before startLoader()
+            // creates the loader thread. Record the size and bail out; the
+            // engine picks the surface up on its next surfaceChanged pass.
+            // Previously this dereferenced null and threw out of
+            // SurfaceView.updateSurface(), which left the engine thread
+            // unusable and crashed the process on relaunch.
+            Arm64Diag.log("surfaceChanged ${width}x$height before loader thread exists; deferring")
+            m_Width = width
+            m_Height = height
+            return
+        }
         if (m_Pixels != null && loaderThread.skipSurfaceChange()) {
             trace("surfaceChanged skipped")
             (this as Object).notify()

@@ -233,7 +233,7 @@ internal open class s3eCamera : PreviewCallback, SuspendResumeListener {
         ) {
             trace("Corrupted buffer was passed by platform. Skipping frame.")
         } else {
-            previewCallback(data!!, params.previewFormat, size.width, size.height, LoaderActivity.m_Activity!!.LoaderThread().getOrientation())
+            previewCallback(data!!, params.previewFormat, size.width, size.height, LoaderActivity.m_Activity!!.LoaderThread()?.getOrientation() ?: 0)
         }
     }
 

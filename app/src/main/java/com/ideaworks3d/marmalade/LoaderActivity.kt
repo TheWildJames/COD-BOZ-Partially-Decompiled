@@ -41,7 +41,25 @@ open class LoaderActivity : Activity() {
     private external fun onOrientationChangedNative()
     private external fun setART(art: Boolean)
 
-    fun LoaderThread(): LoaderThread = m_LoaderThread!!
+    /**
+     * Null-returning accessor, matching the original Java `getLoaderThread()`.
+     *
+     * The Kotlin port had this as `m_LoaderThread!!`, which throws when the
+     * loader thread has not been created yet. That is reachable on arm64
+     * because LoaderView.surfaceChanged() runs as soon as the SurfaceView is
+     * attached in onCreate(), before startLoader() assigns m_LoaderThread:
+     *
+     *   E SurfaceView: java.lang.NullPointerException
+     *       at ...LoaderActivity.LoaderThread(LoaderActivity.kt:44)
+     *       at ...LoaderView.surfaceChanged(LoaderView.kt:457)
+     *
+     * The escaping exception leaves the engine thread unusable and the next
+     * relaunch faults natively in pthread_once() with a null control pointer.
+     */
+    fun LoaderThread(): LoaderThread? = m_LoaderThread
+
+    @JvmName("hasLoaderThread")
+    fun hasLoaderThread(): Boolean = m_LoaderThread != null
 
     init {
         trace("XXX new LoaderActivity XXX: $this")
@@ -272,8 +290,8 @@ open class LoaderActivity : Activity() {
         m_Data = null
         m_IntentBlocking = true
         m_ExecuteIntentActivityNotFoundException = false
-        if (m_LoaderThread == null) return null
-        LoaderThread().runOnOSThread {
+        val lt = LoaderThread() ?: return null
+        lt.runOnOSThread {
             try {
                 this@LoaderActivity.startActivityForResult(intent, INTENT_CODE)
             } catch (e: ActivityNotFoundException) {
@@ -315,7 +333,8 @@ open class LoaderActivity : Activity() {
     }
 
     fun getCursor(uri: Uri, projection: Array<String>, complete: CursorCompleteListener) {
-        LoaderThread().runOnOSThread {
+        val lt = LoaderThread() ?: return
+        lt.runOnOSThread {
             trace("Creating cursor")
             if (VERSION.SDK_INT >= 11) {
                 trace("Using async cursor")

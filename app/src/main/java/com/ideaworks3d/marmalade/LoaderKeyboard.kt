@@ -77,7 +77,7 @@ class LoaderKeyboard(private val m_View: LoaderView) : SuspendResumeListener {
     fun setShowOnScreenKeyboard(show: Boolean) {
         m_onScreenKeyboard = show
         val imm = LoaderActivity.m_Activity!!.getSystemService("input_method") as InputMethodManager
-        LoaderActivity.m_Activity!!.LoaderThread().runOnOSThread {
+        LoaderActivity.m_Activity!!.LoaderThread()?.runOnOSThread {
             trace("Showing On Screen Keyboard: $show")
             if (show) {
                 m_View.requestFocus()

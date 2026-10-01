@@ -37,3 +37,7 @@ ui3.xml
 
 # Tracked despite the blanket ignore: the build hard-fails without useAndroidX.
 !gradle.properties
+
+# Local build artifacts / backups
+*.orig
+boz-arm64-v8a-debug.apk

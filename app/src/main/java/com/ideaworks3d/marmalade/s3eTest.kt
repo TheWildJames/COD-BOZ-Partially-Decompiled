@@ -13,7 +13,7 @@ class s3eTest {
     private val suspendResumeLock = Any()
 
     init {
-        LoaderActivity.m_Activity!!.LoaderThread().runOnOSThread {
+        LoaderActivity.m_Activity!!.LoaderThread()?.runOnOSThread {
             m_Handler = Handler()
         }
     }

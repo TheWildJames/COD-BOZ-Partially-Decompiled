@@ -87,7 +87,7 @@ internal class s3eCamera2 : SuspendResumeListener {
                         out[dest - 1] = planes[2].buffer.get(planes[2].buffer.remaining() - 1)
                         format = 17
                     }
-                    previewCallback(out, format, w, h, LoaderActivity.m_Activity!!.LoaderThread().getOrientation())
+                    previewCallback(out, format, w, h, LoaderActivity.m_Activity!!.LoaderThread()?.getOrientation() ?: 0)
                     image.close()
                 }
             }
