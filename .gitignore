@@ -34,3 +34,6 @@ iwtrace.txt
 ui.xml
 ui2.xml
 ui3.xml
+
+# Tracked despite the blanket ignore: the build hard-fails without useAndroidX.
+!gradle.properties

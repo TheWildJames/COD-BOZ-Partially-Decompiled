@@ -14,19 +14,27 @@ android {
         }
     }
 
+    // Release signing is optional: keystore.properties is gitignored and absent
+    // in fresh clones. Only wire up the signingConfig when it is actually present,
+    // otherwise storeFile resolves to an empty path and configuration fails.
     signingConfigs {
-        create("release") {
-            storeFile = rootProject.file(keystoreProperties.getProperty("storeFile", ""))
-            storePassword = keystoreProperties.getProperty("storePassword", "")
-            keyAlias = keystoreProperties.getProperty("keyAlias", "")
-            keyPassword = keystoreProperties.getProperty("keyPassword", "")
+        if (keystoreProperties.getProperty("storeFile", "").isNotBlank() &&
+            rootProject.file(keystoreProperties.getProperty("storeFile")).exists()
+        ) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword", "")
+                keyAlias = keystoreProperties.getProperty("keyAlias", "")
+                keyPassword = keystoreProperties.getProperty("keyPassword", "")
+            }
         }
     }
 
     namespace = "com.activision.boz"
 
     compileSdk = 36
-    ndkVersion = "25.1.8937393"
+    buildToolsVersion = "36.0.0"
+    ndkVersion = "30.0.16248370"
 
     val versionPropsFile = file("version.properties")
     require(versionPropsFile.canRead()) { "Could not read version.properties!" }
@@ -47,20 +55,19 @@ android {
         versionName = "1.0.8.1"
         versionNameSuffix = "kotlin"
         multiDexEnabled = false
+
+        // arm64-v8a only: Pixel 8 / Tensor G3 is ARMv9-A with no AArch32
+        // execution unit, so armeabi-v7a payloads cannot run there at all.
+        ndk {
+            abiFilters += listOf("arm64-v8a")
+        }
     }
 
     buildTypes {
         getByName("release") {
             //noinspection ChromeOsAbiSupport
             ndk {
-                abiFilters += listOf("armeabi-v7a") //, "arm64-v8a")
-                //abiFilters += listOf("arm64-v8a")
-            }
-        }
-        getByName("release") {
-            //noinspection ChromeOsAbiSupport
-            ndk {
-                abiFilters += listOf("armeabi-v7a") //, "arm64-v8a")
+                abiFilters += listOf("arm64-v8a")
             }
             //not worth enabling
             isMinifyEnabled = true
@@ -68,7 +75,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.findByName("release")
         }
     }
 
